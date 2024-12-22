@@ -4,8 +4,14 @@ library(openxlsx)
 library(threejs)
 library(htmlwidgets)
 library(zoom)
+library(threejs)
+#ibrary(graphjs)
+library(visNetwork)
+#install.packages("devtools")
+#install.packages("visNetwork")
 
 # Încarcă datele
+
 data <- load(file.choose())  
 work_mat3 <- get("work_mat2")  
 
@@ -34,8 +40,10 @@ methods$walktrap <- as.numeric(membership(cluster_walktrap(g)))
 methods$label_propagation <- as.numeric(membership(cluster_label_prop(g)))
 methods$infomap <- as.numeric(membership(cluster_infomap(g)))
 
-if (is.null(V(g)$name)) {
-  V(g)$name <- as.character(1:length(V(g)))
+if (!is.null(colnames(work_mat3))) {
+  V(g)$name <- colnames(work_mat3)
+} else {
+  V(g)$name <- as.character(1:length(V(g))) # Default dacă nu există etichete
 }
 
 # Combină metodele de clustering într-un dataframe
@@ -70,21 +78,33 @@ node_colors <- color_scale(max(node_intersections$intersection_count))[
 V(g)$color <- node_colors
 
 # Vizualizare grafic cu `graphjs`
-gjs <- graphjs(g, main = "Network!", bg = "gray10", showLabels = F, stroke = F, 
+gjs <- graphjs(g, main = "Network!", bg = "gray", showLabels = F, stroke = F, 
                curvature = 0.1, attraction = 0.9, repulsion = 0.8, opacity = 0.9)
 
 print(gjs)
 saveWidget(gjs, file = "Media-Network-gjs.html")
 browseURL("Media-Network-gjs.html")
 
-gjs.an <- graphjs(g, bg = "gray10", showLabels = F, stroke = F, 
+gjs.an <- graphjs(g, bg = "white", showLabels = F, stroke = F, 
                   layout = list(layout_randomly(g, dim = 3),
                                 layout_with_fr(g, dim = 3),
                                 layout_with_drl(g, dim = 3),
                                 layout_on_sphere(g)),
+                  clickCallback = htmlwidgets::JS(
+                    "function(node) {
+      if (node !== null) {
+        let nodeName = this.graph.nodes[node].name || 'Unknown Node';
+        console.log('Node clicked:', nodeName);
+        alert('You clicked on node: ' + nodeName);
+      } else {
+        console.log('No node clicked.');
+      }
+    }"
+                  ),
                   vertex.color = list(V(g)$color, "gray", "orange", V(g)$color),
-                  main = list("Random Layout", "Fruchterman-Reingold", 
-                              "DrL layout", "Sphere"))
+                  main = list("Random Layout"))
+                  #, "Fruchterman-Reingold", 
+                            #  "DrL layout", "Sphere"))
 print(gjs.an)
 saveWidget(gjs.an, file = "Media-Network-gjs-an.html")
 browseURL("Media-Network-gjs-an.html")
