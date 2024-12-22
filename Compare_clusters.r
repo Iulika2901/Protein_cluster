@@ -5,12 +5,10 @@ library(threejs)
 library(htmlwidgets)
 library(zoom)
 library(threejs)
-#ibrary(graphjs)
+#library(graphjs)
 library(visNetwork)
 #install.packages("devtools")
 #install.packages("visNetwork")
-
-# Încarcă datele
 
 data <- load(file.choose())  
 work_mat3 <- get("work_mat2")  
@@ -19,7 +17,7 @@ work_mat3 <- get("work_mat2")
 edges <- which(work_mat3 == 1, arr.ind = TRUE)
 g <- graph_from_edgelist(as.matrix(edges), directed = FALSE)
 
-# Atribuie culori nodurilor bazate pe caracteristici de intersecție
+# Atribuie culori
 methods <- list()
 
 node_features <- data.frame(
@@ -46,7 +44,7 @@ if (!is.null(colnames(work_mat3))) {
   V(g)$name <- as.character(1:length(V(g))) # Default dacă nu există etichete
 }
 
-# Combină metodele de clustering într-un dataframe
+# metode clustering
 node_intersections <- data.frame(
   node = V(g)$name,
   kmeans = methods$kmeans,
@@ -58,7 +56,7 @@ node_intersections <- data.frame(
   infomap = methods$infomap
 )
 
-# Intersecție și calculul frecvenței
+# Intersectie + frecventa
 node_intersections <- node_intersections %>%
   rowwise() %>%
   mutate(
@@ -70,14 +68,14 @@ node_intersections <- node_intersections %>%
 # Creare excel
 write.xlsx(node_intersections, "node_intersections2.xlsx")
 
-# Atribuire culori nodurilor pe baza intersecțiilor
+# Atribuire culori 
 color_scale <- colorRampPalette(c("yellow", "orange", "red"))
 node_colors <- color_scale(max(node_intersections$intersection_count))[
   node_intersections$intersection_count
 ]
 V(g)$color <- node_colors
 
-# Vizualizare grafic cu `graphjs`
+# Vizualizare grafic
 gjs <- graphjs(g, main = "Network!", bg = "gray", showLabels = F, stroke = F, 
                curvature = 0.1, attraction = 0.9, repulsion = 0.8, opacity = 0.9)
 
@@ -102,12 +100,11 @@ gjs.an <- graphjs(g, bg = "white", showLabels = F, stroke = F,
     }"
                   ),
                   vertex.color = list(V(g)$color, "gray", "orange", V(g)$color),
-                  main = list("Random Layout"))
-                  #, "Fruchterman-Reingold", 
-                            #  "DrL layout", "Sphere"))
+                  main = list("Random Layout",
+                  , "Fruchterman-Reingold",  "DrL layout", "Sphere"))
 print(gjs.an)
 saveWidget(gjs.an, file = "Media-Network-gjs-an.html")
 browseURL("Media-Network-gjs-an.html")
 
-# Deschidere fișier Excel cu intersecțiile
-openXL("node_intersections2.xlsx")
+# Excel
+#openXL("node_intersections2.xlsx")
