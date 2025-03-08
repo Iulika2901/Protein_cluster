@@ -1,17 +1,25 @@
+install.packages("stringi", repos = "https://cloud.r-project.org/")
+install.packages("visNetwork", repos = "https://cloud.r-project.org/")
+install.packages("dplyr", repos = "https://cloud.r-project.org/")
+install.packages("magrittr")
+install.packages("dplyr", repos = "https://cloud.r-project.org/")
+install.packages("igraph", repos = "https://cloud.r-project.org/")
+install.packages("igraph")
+install.packages("threejs", repos = "https://cloud.r-project.org/")
+htmlwidgets::saveWidget(gjs, file = "Media-Network-gjs.html")
+
 library(igraph)
 library(dplyr)
+library(magrittr)
 library(openxlsx)
 library(threejs)
 library(htmlwidgets)
 library(zoom)
-library(threejs)
-#library(graphjs)
 library(visNetwork)
-#install.packages("devtools")
-#install.packages("visNetwork")
 
-data <- load(file.choose())  
-work_mat3 <- get("work_mat2")  
+
+#data <- load(file.choose())  
+work_mat3 <- get("work_mat3")  
 
 # Creare graf
 edges <- which(work_mat3 == 1, arr.ind = TRUE)
@@ -27,6 +35,11 @@ node_features <- data.frame(
 )
 set.seed(123)
 scaled_features <- scale(node_features)
+#summary(scaled_features)
+scaled_features[is.na(scaled_features)] <- 0
+scaled_features[is.nan(scaled_features)] <- 0
+any(is.infinite(scaled_features))
+
 kmeans_result <- kmeans(scaled_features, centers = 4, nstart = 25)
 methods$kmeans <- as.numeric(kmeans_result$cluster)
 
@@ -63,7 +76,7 @@ node_intersections <- node_intersections %>%
     intersection_count = n_distinct(c_across(-node)),
     most_frequent = names(sort(table(c_across(-node)), decreasing = TRUE)[1])
   ) %>%
-  ungroup()
+  ungroup() ###############################
 
 # Creare excel
 write.xlsx(node_intersections, "node_intersections2.xlsx")
@@ -100,11 +113,11 @@ gjs.an <- graphjs(g, bg = "white", showLabels = F, stroke = F,
     }"
                   ),
                   vertex.color = list(V(g)$color, "gray", "orange", V(g)$color),
-                  main = list("Random Layout",
-                  , "Fruchterman-Reingold",  "DrL layout", "Sphere"))
+                  #main = list("Random Layout"
+                             # , "Fruchterman-Reingold",  "DrL layout", "Sphere"))
 print(gjs.an)
 saveWidget(gjs.an, file = "Media-Network-gjs-an.html")
 browseURL("Media-Network-gjs-an.html")
 
 # Excel
-#openXL("node_intersections2.xlsx")
+openXL("node_intersections2.xlsx")
